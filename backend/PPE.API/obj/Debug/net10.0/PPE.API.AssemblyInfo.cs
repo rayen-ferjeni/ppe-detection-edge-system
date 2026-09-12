@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PPE.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f795c4188c985fddb25372bf5a25db34119d14d2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d352bed7455ecb2aed183df303c97e2b935a5569")]
 [assembly: System.Reflection.AssemblyProductAttribute("PPE.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PPE.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

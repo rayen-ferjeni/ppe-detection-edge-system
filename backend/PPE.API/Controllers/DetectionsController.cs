@@ -20,27 +20,52 @@ namespace PPE.API.Controllers
             _context = context;
             _hubContext = hubContext;
         }
-        [HttpPost]
+private const string ViolationClassName = "head";
+private const float ConfidenceThreshold = 0.6f;
+private const int ViolationWindowSeconds = 5;
+private const int LookbackSeconds = 30; // fenêtre large pour retrouver le début du "streak"
+
+[HttpPost]
 public async Task<IActionResult> PostDetection([FromBody] Detection detection)
 {
     detection.Timestamp = DateTime.UtcNow;
     _context.Detections.Add(detection);
     await _context.SaveChangesAsync();
 
-    
-    if (detection.ClassName == "head" && detection.Confidence >= 0.6f)
+    if (detection.ClassName == ViolationClassName && detection.Confidence >= ConfidenceThreshold)
     {
-        var violation = new Violation
+        var lookbackStart = DateTime.UtcNow.AddSeconds(-LookbackSeconds);
+
+        // On cherche la détection "head" la plus ANCIENNE dans une fenêtre large
+        var earliestRecentHead = await _context.Detections
+            .Where(d => d.ClassName == ViolationClassName
+                        && d.Confidence >= ConfidenceThreshold
+                        && d.Timestamp >= lookbackStart)
+            .OrderBy(d => d.Timestamp)
+            .FirstOrDefaultAsync();
+
+        bool isContinuousViolation = earliestRecentHead != null
+            && (DateTime.UtcNow - earliestRecentHead.Timestamp).TotalSeconds >= ViolationWindowSeconds;
+
+        bool hasActiveViolation = await _context.Violations
+            .AnyAsync(v => !v.Resolved);
+
+        if (isContinuousViolation && !hasActiveViolation)
         {
-            DetectionId = detection.Id,
-            AlertSent = false,
-            Resolved = false,
-            CreatedAt = DateTime.UtcNow
-        };
-        _context.Violations.Add(violation);
-        await _context.SaveChangesAsync();
+            var violation = new Violation
+            {
+                DetectionId = detection.Id,
+                AlertSent = false,
+                Resolved = false,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Violations.Add(violation);
+            await _context.SaveChangesAsync();
+
+            await _hubContext.Clients.All.SendAsync("ReceiveDetection", detection);
+        }
     }
-    await _hubContext.Clients.All.SendAsync("ReceiveDetection", detection);
+
     return Ok(detection);
 }
 
