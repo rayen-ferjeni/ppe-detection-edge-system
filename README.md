@@ -16,6 +16,6 @@ Real-time PPE (helmet) detection system on edge device (Jetson Nano) with full M
 - [x] Dataset preparation (Roboflow, 7k images)
 - [x] Model training (YOLOv8n)
 - [ ] TensorRT optimization
-- [ ] Backend API
+- [x] Backend API
 - [ ] Blazor dashboard
 - [ ] Docker deployment
